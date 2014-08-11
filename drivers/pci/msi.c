@@ -666,13 +666,30 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
 static void __iomem *msix_map_region(struct pci_dev *dev, unsigned nr_entries)
 {
 	resource_size_t phys_addr;
-	u32 table_offset;
+	u32 table_offset, table_end;
 	u8 bir;
 
 	pci_read_config_dword(dev, dev->msix_cap + PCI_MSIX_TABLE,
 			      &table_offset);
 	bir = (u8)(table_offset & PCI_MSIX_TABLE_BIR);
+	if (bir >= DEVICE_COUNT_RESOURCE) {
+		dev_err(&dev->dev, "MSI-X points to non-exiting BAR %d !\n",
+			bir);
+		return NULL;
+	}
+	if ((pci_resource_flags(dev, bir) & IORESOURCE_MEM) == 0) {
+		dev_err(&dev->dev, "MSI-X points to non-memory BAR %d !\n",
+			bir);
+		return NULL;
+	}
 	table_offset &= PCI_MSIX_TABLE_OFFSET;
+	table_end = table_offset + nr_entries * PCI_MSIX_ENTRY_SIZE;
+	if (table_end <= table_offset ||
+	    table_end > pci_resource_len(dev, bir)) {
+		dev_err(&dev->dev, "MSI-X table outside of BAR boundary !"
+			" (0x%08x..%08x)\n", table_offset, table_end);
+		return NULL;
+	}
 	phys_addr = pci_resource_start(dev, bir) + table_offset;
 
 	return ioremap_nocache(phys_addr, nr_entries * PCI_MSIX_ENTRY_SIZE);
