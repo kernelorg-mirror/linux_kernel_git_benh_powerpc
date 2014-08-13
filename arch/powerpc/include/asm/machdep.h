@@ -253,6 +253,8 @@ struct machdep_calls {
 	/* Reset the secondary bus of bridge */
 	void  (*pcibios_reset_secondary_bus)(struct pci_dev *dev);
 
+	int (*pcie_port_platform_notify)(struct pci_dev *port, int *mask);
+
 	/* Called to shutdown machine specific hardware not already controlled
 	 * by other drivers.
 	 */

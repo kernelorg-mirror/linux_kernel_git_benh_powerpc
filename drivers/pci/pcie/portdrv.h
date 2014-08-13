@@ -74,10 +74,20 @@ static inline int pcie_port_platform_notify(struct pci_dev *port, int *mask)
 	return pcie_port_acpi_setup(port, mask);
 }
 #else /* !CONFIG_ACPI */
+#ifdef CONFIG_PPC
+#include <asm/machdep.h>
+static inline int pcie_port_platform_notify(struct pci_dev *port, int *mask)
+{
+	if (ppc_md.pcie_port_platform_notify)	
+		return ppc_md.pcie_port_platform_notify(port, mask);
+	return 0;
+}
+#else
 static inline int pcie_port_platform_notify(struct pci_dev *port, int *mask)
 {
 	return 0;
 }
+#endif /* CONFIG_PPC */
 #endif /* !CONFIG_ACPI */
 
 #endif /* _PORTDRV_H_ */

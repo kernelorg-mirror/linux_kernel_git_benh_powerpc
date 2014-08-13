@@ -755,6 +755,17 @@ static int pSeries_pci_probe_mode(struct pci_bus *bus)
 	return PCI_PROBE_NORMAL;
 }
 
+static int pseries_pcie_port_platform_notify(struct pci_dev *port, int *mask)
+{
+	/*
+	 * Disable all PCIe port services capabilities for now, they
+	 * collide with platform specific EEH and HotPlug mechanisms
+	 */
+	*mask = 0;
+
+	return 0;
+}
+
 /**
  * pSeries_power_off - tell firmware about how to power off the system.
  *
@@ -796,6 +807,7 @@ define_machine(pseries) {
 	.log_error		= pSeries_log_error,
 	.pcibios_fixup		= pSeries_final_fixup,
 	.pci_probe_mode		= pSeries_pci_probe_mode,
+	.pcie_port_platform_notify = pseries_pcie_port_platform_notify,
 	.restart		= rtas_restart,
 	.power_off		= pSeries_power_off,
 	.halt			= rtas_halt,

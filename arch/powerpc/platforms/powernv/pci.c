@@ -809,6 +809,17 @@ static int pnv_pci_probe_mode(struct pci_bus *bus)
 	return PCI_PROBE_NORMAL;
 }
 
+static int pnv_pcie_port_platform_notify(struct pci_dev *port, int *mask)
+{
+	/*
+	 * Disable all PCIe port services capabilities for now, they
+	 * collide with platform specific EEH and HotPlug mechanisms
+	 */
+	*mask = 0;
+
+	return 0;
+}
+
 void __init pnv_pci_init(void)
 {
 	struct device_node *np;
@@ -856,6 +867,7 @@ void __init pnv_pci_init(void)
 	ppc_md.tce_free_rm = pnv_tce_free_rm;
 	ppc_md.tce_get = pnv_tce_get;
 	ppc_md.pci_probe_mode = pnv_pci_probe_mode;
+	ppc_md.pcie_port_platform_notify = pnv_pcie_port_platform_notify;
 	set_pci_dma_ops(&dma_iommu_ops);
 
 	/* Configure MSIs */
